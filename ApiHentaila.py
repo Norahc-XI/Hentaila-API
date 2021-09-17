@@ -16,15 +16,22 @@ class ApiHentaila():
         self.episodes:int=int(self.PAGINA_COMPLETA.find_all("span")[6].text)
         self.description:str=self.PAGINA_COMPLETA.find_all("p")[1].text
         self.tags:list=categotyTags(self.PAGINA_COMPLETA.find_all("a", {"class":"btn sm"}))
-        self.thumbnail:str="https://hentaila.com"+self.PAGINA_COMPLETA.find("img", {"alt":"hentai"}).attrs["src"]
+        self.thumbnail:str="https://hentaila.com"+self.PAGINA_COMPLETA.find("img", {"alt":"hentai"})["src"]
         self.rate:float=float(self.PAGINA_COMPLETA.find("p", {"class":"fa-star total"}).text.split()[0])
         self.__about__:str="API de la Web Site de https://hentaila.com - Uso Libre, No me hago responsable del uso hacia esta Api @NorahcXI"
 
-    def downloadThumbnail(self, OutputPath:str="Portada"):
-        Img=requests.get(self.thumbnail)
-        File=open(OutputPath+".jpg", "wb")
-        File.write(Img.content)
-        File.close()
+    def downloadThumbnail(self, OutputPath:str="Portada", RHDictImg:dict=None):
+        def download(url):
+            Img=requests.get(url)
+            File=open(OutputPath+".jpg", "wb")
+            File.write(Img.content)
+            File.close()
+
+        if RHDictImg!=None: 
+            download(RHDictImg["imgUrl"])
+        else: 
+            download(self.thumbnail)
+
         return "Descargado | Downloaded"
     
     def info(self) -> str:
@@ -39,7 +46,26 @@ class ApiHentaila():
     def watch(self) -> list:
         watchList=[]
         for i in self.PAGINA_COMPLETA.find("div", {"class":"episodes-list"}):
-            try: watchList.append("https://hentaila.com"+i.find("a").attrs['href'])
+            try: watchList.append("https://hentaila.com"+i.find("a")['href'])
             except: pass
         watchList.sort()
         return watchList
+
+    def recommendedHs(self) -> list:
+        def clearInfo(article) -> dict:
+            dicTemp={
+                "imgUrl":"https://hentaila.com"+article.find("img")["src"],
+                "title":article.find("h2").text,
+                "Url":"https://hentaila.com"+article.find("a")["href"]
+            }
+            return dicTemp
+
+        ListHentais=[]
+        contenedor=self.PAGINA_COMPLETA.find("div", {"class":"grid hentais"})
+        articulos=contenedor.find_all("article")
+        for i in articulos:
+            ListHentais.append(clearInfo(i))
+        return ListHentais
+
+    def __doc__(self):
+        return ("""Documentacion completa : Proximamente""")
